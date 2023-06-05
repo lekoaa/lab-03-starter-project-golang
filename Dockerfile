@@ -1,4 +1,4 @@
-FROM golang
+FROM golang as builder
 
 WORKDIR /app
 
@@ -8,6 +8,12 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o build/fizzbuzz
+RUN CGO_ENABLED=0 go build -o ./fizzbuzz
 
-CMD ["./build/fizzbuzz", "serve"]
+FROM gcr.io/distroless/base
+
+COPY --from=builder /app/fizzbuzz /fizzbuzz
+
+COPY templates /templates
+
+CMD ["/fizzbuzz", "serve", "--port=8080"]
